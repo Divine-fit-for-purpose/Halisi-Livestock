@@ -50,3 +50,4 @@ export const users: UserProfile[] = [
     avatar: "https://randomuser.me/api/portraits/women/52.jpg"
   }
 ];
+

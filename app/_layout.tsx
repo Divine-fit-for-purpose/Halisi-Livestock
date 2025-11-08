@@ -1,10 +1,17 @@
 import { Stack } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
 
 export default function RootLayout() {
-  return <Stack >
-    <Stack.Screen name="index" options={{title:""}}></Stack.Screen>
-    <Stack.Screen name="about" options={{title:"About"}}></Stack.Screen>
-    <Stack.Screen name="Home" options={{title:"Home"}}></Stack.Screen>
+  return (
+    <SafeAreaProvider>
+  <Stack screenOptions={{
+    headerShown:false
+  }}/>
+    </SafeAreaProvider>
+  )
+  
     
-    </Stack>;
+    
+    
 }

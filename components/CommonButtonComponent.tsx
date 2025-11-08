@@ -14,7 +14,7 @@ interface CommonButtonProps {
 export default function CommonButton({
   title,
   onPress,
-  backgroundColor = "#007AFF", // default blue
+  backgroundColor = "#2e7d32", // default blue
   textColor = "#fff",
   style,
   textStyle,
