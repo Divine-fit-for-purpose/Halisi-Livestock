@@ -15,6 +15,14 @@ export default function Index() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
+  // const clearAllData = async () => {
+  // try {
+  //   await AsyncStorage.clear();
+  //   console.log("✅ All local data cleared successfully!");
+  // } catch (error) {
+  //   console.error("❌ Error clearing AsyncStorage:", error);
+  // }}
+
   // 🧠 Load or initialize users
   useEffect(() => {
     (async () => {
@@ -64,6 +72,9 @@ export default function Index() {
     
   };
 
+
+
+  
   return (
     <SafeAreaView style={styles.wrapper}>  
      <StatusBar  backgroundColor="#000" />
