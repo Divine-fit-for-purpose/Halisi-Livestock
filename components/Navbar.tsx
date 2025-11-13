@@ -1,34 +1,55 @@
-
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import logo from "../assets/images/halisi-logo.png";
 
+export default function Navbar({ title }: { title?: string }) {
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const sessionData = await AsyncStorage.getItem("current_user");
+        if (sessionData) {
+          const parsed = JSON.parse(sessionData);
+          setUser(parsed);
+        }
+      } catch (error) {
+        console.error("Error loading user session:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
-interface NavbarProps {
-  avatarUri?: string;
-  onAvatarPress?: () => void;
-  title?: string;
-}
+  const handleAvatarPress = () => {
+    router.replace("/"); // Logout back to login
+  };
+  console.log("Navbar user:", user);
 
-export default function Navbar({ avatarUri, onAvatarPress, title }: NavbarProps) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.navbar}>
         {/* ✅ Left: Logo */}
         <View style={styles.leftContainer}>
-          <Image source={require('../assets/images/halisi-logo.png')} style={styles.logo} resizeMode="contain" />
+          <Image
+            source={require("../assets/images/halisi-logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* 🧭 Center: Optional title */}
+        {/* 🧭 Center: Title */}
         {title && <Text style={styles.title}>{title}</Text>}
 
         {/* 🧍‍♂️ Right: Avatar */}
-        <TouchableOpacity style={styles.rightContainer} onPress={onAvatarPress}>
+        <TouchableOpacity style={styles.rightContainer} onPress={handleAvatarPress}>
           <Image
             source={
-              avatarUri
-                ? { uri: avatarUri }
+              user?.avatar 
+                ? { uri: user.avatar }
                 : logo // fallback avatar
             }
             style={styles.avatar}
@@ -57,7 +78,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 100,
+    width: 40,
     height: 40,
   },
   title: {

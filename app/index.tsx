@@ -68,7 +68,7 @@ export default function Index() {
 
     // ✅ Role-based navigation
     
-      router.replace("/FillForm");
+      router.replace("/FarmerForm");
     
   };
 
@@ -77,7 +77,7 @@ export default function Index() {
   
   return (
     <SafeAreaView style={styles.wrapper}>  
-     <StatusBar  backgroundColor="#000" />
+     <StatusBar  backgroundColor="#2e7d32" />
 
     <View style={styles.container}>
       <Image source={require('../assets/images/halisi-logo.png')} style={styles.logo} resizeMode="contain" />
