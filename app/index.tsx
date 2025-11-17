@@ -99,7 +99,7 @@ export default function Index() {
       />
 
       <View style={styles.buttonContainer}>
-        <CommonButton title="Login" onPress={()=>router.replace('/FarmerForm')} />
+        <CommonButton title="Login" onPress={handleLogin} />
       </View>
     </View>
     </SafeAreaView>

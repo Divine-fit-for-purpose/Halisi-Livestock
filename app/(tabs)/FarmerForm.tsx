@@ -27,6 +27,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateInput from "@/components/DateInputComponent";
 import Dropdown from "@/components/DropDown";
 import InputField from "@/components/InputComponent";
+import { loadSession } from "@/storage/saveSession";
 import { router } from "expo-router";
 import { Image as RNImage } from "react-native";
 
@@ -144,6 +145,16 @@ export default function RegisterFarmers() {
   // --- PDF Certificate download (cross-platform) ---
   const handleDownload = async () => {
     try {
+      // Load the logged-in agent's session data
+      const agentSession = await loadSession();
+      if (!agentSession) {
+        throw new Error("No agent session found. Please log in again.");
+      }
+
+      const agentId = agentSession.registration_number || agentSession.national_id || "N/A";
+      const agentName = agentSession.name || "Unknown Agent";
+      const certificateNumber = `CERT-${Date.now()}`;
+
       const cert = {
         firstName,
         lastName,
@@ -155,24 +166,20 @@ export default function RegisterFarmers() {
         city,
         address,
         nationalId,
+        certificateNumber,
+        agentId,
+        agentName,
       };
 
-      // Attempt to embed the captured photo as a base64 data URL so the WebView used by printToFileAsync
-      // can render it reliably across platforms. If reading fails, fall back to using the original uri.
+      console.log("handleDownload: starting PDF generation");
+      console.log("handleDownload: Agent ID:", agentId, "Agent Name:", agentName);
+      console.log("handleDownload: Certificate Number:", certificateNumber);
+
+      // Embed photo from camera base64 if available (most reliable)
       let photoSrc: string | null = null;
       if (photoBase64) {
-        // we captured base64 directly from the camera
         photoSrc = `data:image/jpeg;base64,${photoBase64}`;
-      } else if (photoUri) {
-        try {
-          const ext = photoUri.split(".").pop()?.split("?")[0]?.toLowerCase();
-          const mime = ext === "png" ? "image/png" : "image/jpeg";
-          const base64 = await (FileSystem as any).readAsStringAsync(photoUri, { encoding: (FileSystem as any).EncodingType.Base64 });
-          photoSrc = `data:${mime};base64,${base64}`;
-        } catch (e) {
-          console.warn("Could not read photo as base64, falling back to raw uri:", e);
-          photoSrc = photoUri; // fallback: may still fail in WebView, but try
-        }
+        console.log("handleDownload: embedding photo from camera base64, size:", photoSrc.length);
       }
 
       // Prepare logo source (try to embed as base64, fallback to uri)
@@ -212,55 +219,98 @@ export default function RegisterFarmers() {
             <meta charset="utf-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; padding:30px; background:#f7f7f7; }
-              .card { max-width: 800px; margin: 0 auto; background: #fff; padding: 28px; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-              .header { text-align: center; color: #2e7d32; }
-              .title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-              .subtitle { color: #666; margin-bottom: 18px; }
-              .row { display: flex; gap: 20px; align-items: flex-start; }
-              .left { width: 170px; }
-              .photo { width: 150px; height: 150px; border-radius: 8px; object-fit: cover; border: 1px solid #e6e6e6; }
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              @page { size: A4; margin: 0; }
+              @media print { body { margin: 0; padding: 0; } }
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+                background: #fff;
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+              }
+              .card { 
+                width: 100%;
+                height: 100%;
+                background: #fff; 
+                padding: 20mm;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+              }
+              .header { text-align: center; color: #2e7d32; margin-bottom: 15mm; }
+              .logo { margin-bottom: 8mm; }
+              .logo img { height: 25mm; object-fit: contain; }
+              .title { font-size: 24px; font-weight: 700; margin-bottom: 3mm; }
+              .subtitle { color: #666; font-size: 13px; margin-bottom: 10mm; }
+              .row { display: flex; gap: 15mm; }
+              .left { flex-shrink: 1; }
+              .photo { width: 50mm; height: 40mm;  object-fit: cover; border: 1px solid #ddd; }
               .right { flex: 1; }
-              .info { margin-bottom: 8px; color: #222; }
-              .label { color: #666; font-weight: 600; width: 160px; display:inline-block; }
-              .value { color: #000; display:inline-block; }
-              .footer { margin-top: 20px; text-align: center; color: #888; font-size: 12px; }
-              @media (max-width: 600px) {
-                .row { flex-direction: column; }
-                .left { width: auto; display:flex; justify-content:center; }
+              .info { 
+                margin-bottom: 5mm; 
+                color: #222; 
+                font-size: 12px;
+                display: flex;
+                gap: 3mm; /* increased by 25% */
+                align-items: center;
+              }
+              .label { color: #333; font-weight: 700; width: 20mm; flex-shrink: 0; } /* labels reduced by 75% */
+              .value { color: #000; flex: 1; }
+              .footer { 
+                margin-top: auto; 
+                padding-top: 10mm;
+                text-align: center; 
+                color: #999; 
+                font-size: 10px;
+                border-top: 1px solid #eee;
               }
             </style>
           </head>
           <body>
             <div class="card">
               <div class="header">
-                ${logoSrc ? `<div style="text-align:center;margin-bottom:8px;"><img src="${logoSrc}" style="height:48px;object-fit:contain;" /></div>` : ""}
-                <div class="title">Registration Certificate</div>
-                <div class="subtitle">A record of registration from Halisi</div>
+                ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
+                
+                <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
+                <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
               </div>
 
-              <div class="row" style="margin-top:20px;">
+              <div class="row">
                 <div class="left">
-                  ${photoSrc ? `<img src="${photoSrc}" class="photo" />` : `<div style="width:150px;height:150px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;color:#999">No Photo</div>`}
+                  ${photoSrc ? `<img src="${photoSrc}" class="photo" />` : `<div style="width:60mm;height:70mm; background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">No Photo</div>`}
                 </div>
 
                 <div class="right">
-                  <div class="info"><span class="label">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
-                  <div class="info"><span class="label">Email:</span> <span class="value">${escapeHtml(cert.email)}</span></div>
+                  <div class="info"><span class="label font-bold">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
+                  <div class="info"><span class="label ">Email:</span> <span class="value">${escapeHtml(cert.email)}</span></div>
                   <div class="info"><span class="label">Phone:</span> <span class="value">${escapeHtml(cert.phone)}</span></div>
                   <div class="info"><span class="label">Gender:</span> <span class="value">${escapeHtml(cert.gender)}</span></div>
-                  <div class="info"><span class="label">Date of birth:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
+                  <div class="info"><span class="label">DOB:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
                   <div class="info"><span class="label">Country:</span> <span class="value">${escapeHtml(cert.country)}</span></div>
                   <div class="info"><span class="label">City:</span> <span class="value">${escapeHtml(cert.city)}</span></div>
                   <div class="info"><span class="label">Address:</span> <span class="value">${escapeHtml(cert.address)}</span></div>
                   <div class="info"><span class="label">National ID:</span> <span class="value">${escapeHtml(cert.nationalId)}</span></div>
+                  <div class="info" style="margin-top: 8mm; padding-top: 8mm; border-top: 1px solid #ddd;"><span class="label">Agent ID:</span> <span class="value">${escapeHtml(cert.agentId)}</span></div>
+                  <div class="info"><span class="label">Agent:</span> <span class="value">${escapeHtml(cert.agentName)}</span></div>
                 </div>
+                
+              </div>
+              <div style="margin-top: 15mm; padding: 10mm; font-size: 9px; color: #555; line-height: 1.5; border-top: 1px solid #ddd; margin-left: 20mm; margin-right: 20mm;">
+                <p style="margin: 0 0 8mm 0;">
+                  On ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}, ${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)} expressly consented, via the Halisi platform, to the collection, transfer, and processing of both personal data and registered livestock information, specially for the purposes of credit and insurance applications. Data was collected by agent ${escapeHtml(cert.agentName)}.
+                </p>
+                <p style="margin: 0 0 8mm 0;">
+                  Document generated by Halisi on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}, by agent ${escapeHtml(cert.agentName)}.
+                </p>
+                <p style="margin: 0;">
+                  For more information, please contact info@halisi.ai or visit www.halisi.ai
+                </p>
+              </div>
               </div>
 
-              <div class="footer">
-                Generated by Halisi • ${new Date().toLocaleDateString()}
-              </div>
-            </div>
+
           </body>
         </html>
       `;
@@ -269,14 +319,18 @@ export default function RegisterFarmers() {
 
       // Web: use base64 and trigger browser download
       if (Platform.OS === "web") {
+        console.log("handleDownload: web platform detected");
         const webFile = await Print.printToFileAsync({ html, base64: true });
+        console.log("handleDownload: printToFileAsync returned on web", webFile?.base64 ? "with base64" : "without base64");
         if (webFile.base64) {
+          console.log("handleDownload: creating download link");
           const link = document.createElement("a");
           link.href = `data:application/pdf;base64,${webFile.base64}`;
           link.download = filename;
           document.body.appendChild(link);
           link.click();
           link.remove();
+          Alert.alert("Success", "Certificate downloaded!");
           return;
         }
         Alert.alert("PDF generated", "PDF created but cannot be saved on this platform.");
@@ -284,31 +338,49 @@ export default function RegisterFarmers() {
       }
 
       // Native: generate temp file uri
+      console.log("handleDownload: native platform detected, calling printToFileAsync");
       let file: any = null;
       try {
         file = await Print.printToFileAsync({ html, base64: false });
+        console.log("handleDownload: printToFileAsync succeeded, file uri:", file?.uri);
       } catch (printErr) {
         console.warn("printToFileAsync failed on first attempt:", printErr);
         // Retry without images (some renderers fail when images are too large/corrupt)
+        console.log("handleDownload: retrying printToFileAsync without images");
         const strippedHtml = html
           .replace(/<img[^>]*>/g, "")
           .replace(/<div[^>]*class=\"logo-img\"[^>]*>[\s\S]*?<\/div>/g, "");
         try {
           file = await Print.printToFileAsync({ html: strippedHtml, base64: false });
+          console.log("handleDownload: retry succeeded, file uri:", file?.uri);
         } catch (secondErr) {
           console.error("printToFileAsync failed again after stripping images:", secondErr);
           throw printErr; // rethrow original to be handled by outer catch
         }
       }
 
+      // Validate we got a file URI
+      if (!file?.uri) {
+        console.error("handleDownload: ERROR - file object exists but uri is missing or falsy");
+        throw new Error("PDF generated but no file URI returned");
+      }
+
       // Try to share the generated PDF (works on native devices). If sharing unavailable, show temp uri.
+      console.log("handleDownload: checking if Sharing is available");
       if (await Sharing.isAvailableAsync()) {
+        console.log("handleDownload: Sharing available, calling shareAsync with uri:", file.uri);
         await Sharing.shareAsync(file.uri);
+        console.log("handleDownload: shareAsync completed successfully");
       } else {
+        console.log("handleDownload: Sharing not available, showing alert");
         Alert.alert("PDF generated", `PDF created. Temp uri: ${file.uri}`);
       }
     } catch (error) {
-      console.error("Error generating certificate PDF:", error);
+      console.error("handleDownload: OUTER CATCH - Error generating certificate PDF:", error);
+      if (error instanceof Error) {
+        console.error("  Error message:", error.message);
+        console.error("  Stack:", error.stack);
+      }
       Alert.alert("Error", "Failed to generate certificate PDF. See console for details.");
     }
   };
