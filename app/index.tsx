@@ -10,10 +10,61 @@ import { Alert, Image, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
-export default function Index() {
+import { GoogleSignin, GoogleSigninButton, isErrorWithCode, isSuccessResponse, statusCodes } from "@react-native-google-signin/google-signin";
+
+
+
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_WEB_CLIENT_SECRET, // client ID of type WEB for your server. Required to get the `idToken` on the user object, and for offline access.
+  scopes: [
+    /* what APIs you want to access on behalf of the user, default is email and profile
+    this is just an example, most likely you don't need this option at all! */
+    'https://www.googleapis.com/auth/drive.readonly',
+  ],
+  offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
+  // hostedDomain: '', // specifies a hosted domain restriction
+  forceCodeForRefreshToken: true, // [Android] related to `serverAuthCode`, read the docs link below *.
+  // accountName: '', // [Android] specifies an account name on the device that should be used
+  iosClientId: process.env.EXPO_IOS_CLIENT_ID, // [iOS] if you want to specify the client ID of type iOS (otherwise, it is taken from GoogleService-Info.plist)
+  // googleServicePlistPath: '', // [iOS] if you renamed your GoogleService-Info file, new name here, e.g. "GoogleService-Info-Staging"
+  // openIdRealm: '', // [iOS] The OpenID2 realm of the home web server. This allows Google to include the user's OpenID Identifier in the OpenID Connect ID token.
+  // profileImageSize: 120, // [iOS] The desired height (and width) of the profile image. Defaults to 120px
+});
+
+export default function index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const [user,setUser] = useState<any>(null)
+
+
+  const handleSignIn = async () => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const response = await GoogleSignin.signIn();
+    if (isSuccessResponse(response)) {
+      setUser({ userInfo: response.data });
+
+    } else {
+      // sign in was cancelled by user
+    }
+  } catch (error) {
+    if (isErrorWithCode(error)) {
+      switch (error.code) {
+        case statusCodes.IN_PROGRESS:
+          // operation (eg. sign in) already in progress
+          break;
+        case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+          // Android only, play services not available or outdated
+          break;
+        default:
+        // some other error happened
+      }
+    } else {
+      // an error that's not related to google sign in occurred
+    }
+  }
+};
 
   // const clearAllData = async () => {
   // try {
@@ -100,6 +151,10 @@ export default function Index() {
 
       <View style={styles.buttonContainer}>
         <CommonButton title="Login" onPress={handleLogin} />
+      </View>
+      <View>
+
+        <GoogleSigninButton size={GoogleSigninButton.Size.Wide}  color={GoogleSigninButton.Color.Light} style={{width:212,height:48}} onPress={handleSignIn}/>
       </View>
     </View>
     </SafeAreaView>
