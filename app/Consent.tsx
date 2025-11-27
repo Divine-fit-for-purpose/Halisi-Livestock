@@ -1,12 +1,12 @@
-import CommonButton from '@/components/CommonButtonComponent';
-import { clearSession } from '@/storage/saveSession';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Text, View } from 'react-native';
+import CommonButton from '../components/CommonButtonComponent';
+import { clearSession } from '../storage/saveSession';
 
 
 
-export default function VerifyFarmers() {
+export default function Consent() {
   const router = useRouter();
   const handleLogout = async () => {
       try {

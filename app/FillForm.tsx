@@ -1,7 +1,7 @@
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function FillForm() {
   const [agreed, setAgreed] = useState(false);
@@ -23,9 +23,7 @@ export default function FillForm() {
       <Text style={styles.title}>Register Farmers</Text>
 
       <Text style={styles.text}>
-        Before proceeding, please read and agree to the terms and conditions of
-        registration. This ensures your compliance with the Halisi farmer
-        network policies and data privacy standards.
+       To proceed using the application, please review and agree to our Terms and Conditions.
       </Text>
 
       <View style={styles.checkboxContainer}>
@@ -36,7 +34,7 @@ export default function FillForm() {
         />
         <Text style={styles.checkboxLabel}>
           I agree to the{" "}
-          <Text style={styles.link}>Terms and Conditions</Text>
+          <Text style={styles.link} onPress={()=>Linking.openURL("https://halisi.ai/halisi-livestock-privacy-en")}>Terms and Conditions</Text>
         </Text>
       </View>
 

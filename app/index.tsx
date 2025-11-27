@@ -1,21 +1,21 @@
-
-import CommonButton from "@/components/CommonButtonComponent";
-import InputComponent from "@/components/InputComponent";
-import { users } from "@/data/user";
-import { saveSession } from "@/storage/saveSession";
-import { loadUsersFromStorage, saveUsersToStorage } from "@/storage/storeUsers";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { users } from "../data/user";
+import { saveSession } from "../storage/saveSession";
+import { loadUsersFromStorage, saveUsersToStorage } from "../storage/storeUsers";
 
 
 import { GoogleSignin, GoogleSigninButton, isErrorWithCode, isSuccessResponse, statusCodes } from "@react-native-google-signin/google-signin";
+import CommonButton from "../components/CommonButtonComponent";
+import InputComponent from "../components/InputComponent";
+
 
 
 
 GoogleSignin.configure({
-  webClientId: process.env.EXPO_WEB_CLIENT_SECRET, // client ID of type WEB for your server. Required to get the `idToken` on the user object, and for offline access.
+  webClientId:"316918224988-1nq9g2r87tcj81eh65bra7pr426vqr55.apps.googleusercontent.com", // client ID of type WEB for your server. Required to get the `idToken` on the user object, and for offline access.
   scopes: [
     /* what APIs you want to access on behalf of the user, default is email and profile
     this is just an example, most likely you don't need this option at all! */
@@ -25,7 +25,7 @@ GoogleSignin.configure({
   // hostedDomain: '', // specifies a hosted domain restriction
   forceCodeForRefreshToken: true, // [Android] related to `serverAuthCode`, read the docs link below *.
   // accountName: '', // [Android] specifies an account name on the device that should be used
-  iosClientId: process.env.EXPO_IOS_CLIENT_ID, // [iOS] if you want to specify the client ID of type iOS (otherwise, it is taken from GoogleService-Info.plist)
+  iosClientId:"316918224988-d1565quphs7un213n3c2sqlbg96jq4cn.apps.googleusercontent.com", // [iOS] if you want to specify the client ID of type iOS (otherwise, it is taken from GoogleService-Info.plist)
   // googleServicePlistPath: '', // [iOS] if you renamed your GoogleService-Info file, new name here, e.g. "GoogleService-Info-Staging"
   // openIdRealm: '', // [iOS] The OpenID2 realm of the home web server. This allows Google to include the user's OpenID Identifier in the OpenID Connect ID token.
   // profileImageSize: 120, // [iOS] The desired height (and width) of the profile image. Defaults to 120px
@@ -42,14 +42,21 @@ export default function index() {
   try {
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
-    if (isSuccessResponse(response)) {
+    if (isSuccessResponse(response) && response.data) {
       setUser({ userInfo: response.data });
+      // Alert.alert("✅ Google Sign-In Successful", `Welcome ${response.data.user.name}!`);
+      console.log("Google Sign-In Response:", response.data);
+      const name = response.data.user?.name ?? "User";
+      Alert.alert("✅ Google Sign-In Successful", `Welcome ${name}!`);
+      router.replace("/FillForm");
 
     } else {
+      console.log("Google Sign-In cancelled or failed");
       // sign in was cancelled by user
     }
   } catch (error) {
     if (isErrorWithCode(error)) {
+       console.log("There was an error during Google Sign-In:", error); 
       switch (error.code) {
         case statusCodes.IN_PROGRESS:
           // operation (eg. sign in) already in progress
@@ -69,12 +76,12 @@ export default function index() {
   // const clearAllData = async () => {
   // try {
   //   await AsyncStorage.clear();
-  //   console.log("✅ All local data cleared successfully!");
+  //   console.log("All local data cleared successfully!");
   // } catch (error) {
-  //   console.error("❌ Error clearing AsyncStorage:", error);
+  //   console.error(" Error clearing AsyncStorage:", error);
   // }}
 
-  // 🧠 Load or initialize users
+  //  Load or initialize users
   useEffect(() => {
     (async () => {
       const existingUsers = await loadUsersFromStorage();
@@ -83,11 +90,11 @@ export default function index() {
         await saveUsersToStorage(users);
       }
       const savedUsers = await loadUsersFromStorage();
-      console.log("🧠 Users currently in AsyncStorage:", savedUsers);
+      // console.log(" Users currently in AsyncStorage:", savedUsers);
     })();
   }, []);
 
-  // ✅ Handle Login
+  //  Handle Login
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("⚠️ Missing Fields", "Please enter both email and password");
@@ -97,7 +104,7 @@ export default function index() {
     const storedUsers = await loadUsersFromStorage();
 
     if (!storedUsers) {
-      Alert.alert("❌ Error", "No user data found in local storage");
+      Alert.alert(" Error", "No user data found in local storage");
       return;
     }
 
@@ -109,17 +116,17 @@ export default function index() {
     );
 
     if (!foundUser) {
-      Alert.alert("❌ Login Failed", "Invalid email or password");
+      Alert.alert("Login Failed", "Invalid email or password");
       return;
     }
 
     // ✅ If we reach here, login success
     await saveSession(foundUser);
-    Alert.alert("✅ Login Successful", `Welcome ${foundUser.name}!`);
+    Alert.alert("Login Successful", `Welcome ${foundUser.name}!`);
 
     // ✅ Role-based navigation
     
-      router.replace("/FarmerForm");
+      router.replace("/FarmerForm" as any);
     
   };
 

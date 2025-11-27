@@ -1,35 +1,35 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   CameraType,
-  CameraView,
-  useCameraPermissions,
+  useCameraPermissions
 } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as Print from "expo-print";
+import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useRef, useState } from "react";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
+  Image as RNImage,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import DateInput from "@/components/DateInputComponent";
-import Dropdown from "@/components/DropDown";
-import InputField from "@/components/InputComponent";
-import { loadSession } from "@/storage/saveSession";
-import { router } from "expo-router";
-import { Image as RNImage } from "react-native";
+import StepCamera from "../../components/StepCamera";
+import StepLocation from "../../components/StepLocations";
+import StepNationalId from "../../components/StepNationalID";
+import StepPersonalInfo from "../../components/StepPersonalInfo";
+import StepReviewSubmit from "../../components/StepReview";
+import { loadSession } from "../../storage/saveSession";
+
 
 // bundled logo asset
 const logoAsset = require("../../assets/images/halisi-logo.png");
@@ -37,8 +37,8 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 export default function RegisterFarmers() {
   const [step, setStep] = useState<number>(1);
-  const totalSteps = 4;
-
+  const totalSteps = 5;
+const [isEnabled, setIsEnabled] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
@@ -57,6 +57,7 @@ export default function RegisterFarmers() {
   const [nationalId, setNationalId] = useState("");
   const [address, setAddress] = useState("");
   const [verify, setVerified] = useState(false);
+  
 
   // Camera toggle
   const toggleCameraFacing = () =>
@@ -90,7 +91,7 @@ export default function RegisterFarmers() {
 
   // Validation before moving to next step
   const validateStep = () => {
-    if (step === 1 && !photoUri) {
+    if (step === 2 && !photoUri) {
       Alert.alert("Missing Photo", "Please take a profile photo before continuing.");
       return false;
     }
@@ -404,68 +405,56 @@ export default function RegisterFarmers() {
   // Step content rendering
   const renderStepContent = () => {
     if (!permission) return <View />;
+
+
     switch (step) {
       case 1:
-        if (!permission.granted) {
-          return (
-            <View style={styles.permissionContainer}>
-              <Text style={styles.permissionText}>
-                We need your permission to use the camera.
-              </Text>
-              <TouchableOpacity style={styles.nextButton} onPress={requestPermission}>
-                <Text style={styles.buttonText}>Grant Permission</Text>
-              </TouchableOpacity>
-            </View>
-          );
-        }
         return (
-          <View style={styles.stepCard}>
-            <Text style={styles.sectionTitle}>Step 1: Capture User Photo</Text>
-            {photoUri ? (
-              <>
-                <Image source={{ uri: photoUri }} style={styles.preview} />
-                <TouchableOpacity style={styles.retakeButton} onPress={() => setPhotoUri(null)}>
-                  <Text style={styles.retakeText}>Retake Photo</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
-                <View style={styles.cameraControls}>
-                  <TouchableOpacity style={styles.flipButton} onPress={toggleCameraFacing}>
-                    <Ionicons name="camera-reverse" size={28} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
-                    <Ionicons name="camera" size={28} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        );
 
+
+<StepNationalId
+isEnabled={isEnabled}
+        setIsEnabled={setIsEnabled}
+        nationalId={nationalId}
+        setNationalId={setNationalId}
+        country={country}
+        setCountry={setCountry}
+/>
+)
       case 2:
         return (
-          <View style={styles.stepCard}>
-            <Text style={styles.sectionTitle}>Step 2: Personal Information</Text>
-            <InputField label="First Name" value={firstName} onChangeText={setFirstName} />
-            <InputField label="Last Name" value={lastName} onChangeText={setLastName} />
-            <InputField label="Email" value={email} onChangeText={setEmail} />
-            <InputField label="National ID" value={nationalId} onChangeText={setNationalId} />
-            <Dropdown
-              label="Gender"
-              selectedValue={gender}
-              onValueChange={setGender}
-              options={[
-                { label: "Male", value: "male" },
-                { label: "Female", value: "female" },
-                { label: "Other", value: "other" },
-              ]}
-            />
-          </View>
+
+<StepCamera
+        permission={permission}
+        requestPermission={requestPermission}
+        photoUri={photoUri}
+        setPhotoUri={setPhotoUri}
+        cameraRef={cameraRef}
+        facing={facing}
+        toggleCameraFacing={toggleCameraFacing}
+        takePicture={takePicture}
+        species={"farmer"}
+      />
         );
 
       case 3:
+        return (
+
+          <StepPersonalInfo
+        firstName={firstName}
+        lastName={lastName}
+        email={email}
+        gender={gender}
+        nationalId={nationalId}
+        setFirstName={setFirstName}
+        setLastName={setLastName}
+        setEmail={setEmail}
+        setGender={setGender}
+        setNationalId={setNationalId}
+      />
+        );
+
+      case 4:
         const kenyaCities = ["Nairobi", "Mombasa", "Kisumu", "Eldoret", "Nakuru"];
         const congoCities = ["Kinshasa", "Lubumbashi", "Goma", "Kisangani", "Mbandaka"];
         const cityOptions =
@@ -476,90 +465,62 @@ export default function RegisterFarmers() {
             : [];
 
         return (
-          <View style={styles.stepCard}>
-            <Text style={styles.sectionTitle}>Step 3: Location & Birth Info</Text>
-            <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
-              <DateInput label="Date of Birth" value={dob} onChange={setDob} />
-            </View>
-            <Dropdown
-              label="Country"
-              selectedValue={country}
-              onValueChange={setCountry}
-              options={[
-                { label: "Kenya", value: "Kenya" },
-                { label: "Congo (DRC)", value: "Congo" },
-              ]}
-            />
-            {country ? (
-              <Dropdown
-                label="City"
-                selectedValue={city}
-                onValueChange={setCity}
-                options={cityOptions}
-              />
-            ) : null}
-            <InputField label="Phone Number" value={phone} onChangeText={setPhone} />
-            <InputField label="Address" value={address} onChangeText={setAddress} />
-          </View>
+          // <View style={styles.stepCard}>
+          //   <Text style={styles.sectionTitle}>Step 4: Location & Birth Info</Text>
+          //   <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
+          //     <DateInput label="Date of Birth" value={dob} onChange={setDob} />
+          //   </View>
+          //   <Dropdown
+          //     label="Country"
+          //     selectedValue={country}
+          //     onValueChange={setCountry}
+          //     options={[
+          //       { label: "Kenya", value: "Kenya" },
+          //       { label: "Congo (DRC)", value: "Congo" },
+          //     ]}
+          //   />
+          //   {country ? (
+          //     <Dropdown
+          //       label="City"
+          //       selectedValue={city}
+          //       onValueChange={setCity}
+          //       options={cityOptions}
+          //     />
+          //   ) : null}
+          //   <InputField label="Phone Number" value={phone} onChangeText={setPhone} />
+          //   <InputField label="Address" value={address} onChangeText={setAddress} />
+          // </View>
+          <StepLocation
+        dob={dob}
+        setDob={setDob}
+        country={country}
+        setCountry={setCountry}
+        city={city}
+        setCity={setCity}
+        phone={phone}
+        setPhone={setPhone}
+        address={address}
+        setAddress={setAddress}
+      />
         );
 
-      case 4:
+      case 5:
         return (
-          <View style={styles.stepCard}>
-            <Text style={styles.sectionTitle}>Step 4: Review & Submit</Text>
-            <View style={styles.reviewContainer}>
-              <View style={styles.leftColumn}>
-                {photoUri ? (
-                  <Image source={{ uri: photoUri }} style={styles.reviewImage} />
-                ) : (
-                  <View style={styles.placeholderImage}>
-                    <Text>No Image</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.rightColumn}>
-                <Text style={styles.label}>Name:</Text>
-                <Text style={styles.value}>{firstName} {lastName}</Text>
-
-                <Text style={styles.label}>Email:</Text>
-                <Text style={styles.value}>{email}</Text>
-
-                <Text style={styles.label}>Gender:</Text>
-                <Text style={styles.value}>{gender}</Text>
-
-                <Text style={styles.label}>Phone:</Text>
-                <Text style={styles.value}>{phone}</Text>
-
-                <Text style={styles.label}>Date of Birth:</Text>
-                <Text style={styles.value}>{dob?.toLocaleDateString()}</Text>
-
-                <Text style={styles.label}>Country:</Text>
-                <Text style={styles.value}>{country}</Text>
-
-                <Text style={styles.label}>City:</Text>
-                <Text style={styles.value}>{city}</Text>
-
-                <Text style={styles.label}>Address:</Text>
-                <Text style={styles.value}>{address}</Text>
-
-                <Text style={styles.label}>National ID:</Text>
-                <Text style={styles.value}>{nationalId}</Text>
-              </View>
-            </View>
-
-            <View style={styles.reviewButtons}>
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-                <Ionicons name="download" size={18} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.buttonText}>Download</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.submitButton} onPress={saveDataToLocalStorage}>
-                <Ionicons name="checkmark" size={18} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <StepReviewSubmit
+        photoUri={photoUri}
+        firstName={firstName}
+        lastName={lastName}
+        email={email}
+        gender={gender}
+        phone={phone}
+        dob={dob}
+        country={country}
+        city={city}
+        address={address}
+        nationalId={nationalId}
+        onDownload={handleDownload}
+        onSubmit={saveDataToLocalStorage}
+      />
         );
       }
     };
@@ -662,13 +623,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: "600", marginBottom: 12, color: "#2e7d32" },
 
-  camera: { width: 280, height: 280, alignSelf: "center" },
-  preview: { width: 280, height: 280, alignSelf: "center", marginBottom: 10, borderRadius: 8 },
-  cameraControls: { flexDirection: "row", justifyContent: "center", gap: 20, marginTop: 12 },
-  flipButton: { backgroundColor: "#2e7d32", padding: 10, borderRadius: 30 },
-  captureButton: { backgroundColor: "#2e7d32", padding: 10, borderRadius: 30 },
-  retakeButton: { backgroundColor: "#2e7d32", padding: 10, borderRadius: 8, alignSelf: "center" },
-  retakeText: { color: "#fff", fontWeight: "600" },
+ 
 
   permissionContainer: { alignItems: "center", justifyContent: "center" },
   permissionText: { textAlign: "center", fontSize: 16, marginBottom: 10 },
@@ -690,4 +645,9 @@ const styles = StyleSheet.create({
   reviewButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 18 },
   downloadButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#1e88e5", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
   submitButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
+
+
+
+
+
 });

@@ -27,7 +27,7 @@ export default function Navbar({ title }: { title?: string }) {
   const handleAvatarPress = () => {
     router.replace("/"); // Logout back to login
   };
-  console.log("Navbar user:", user);
+  // console.log("Navbar user:", user);
 
   return (
     <SafeAreaView style={styles.safeArea}>

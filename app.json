@@ -10,10 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.halisi.mobile"
+      "bundleIdentifier": "com.anonymous.HalisiMobileapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,13 +45,18 @@
         }
       ],
       "expo-web-browser",
-      
-       [
+      [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.316918224988-d1565quphs7un213n3c2sqlbg96jq4cn"
         }
+      ],[
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to take photos."
+        }
       ]
+      
     ],
     "experiments": {
       "typedRoutes": true,
@@ -60,6 +67,7 @@
       "eas": {
         "projectId": "dc5d0ede-2c65-4289-8ccc-f5b732733cca"
       }
-    }
+    },
+    "owner": "deevyne99"
   }
 }

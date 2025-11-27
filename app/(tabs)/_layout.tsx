@@ -1,9 +1,9 @@
 // app/(tabs)/_layout.tsx
-import Navbar from "@/components/Navbar";
+
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-
+import Navbar from "../../components/Navbar";
 
 export default function TabsLayout() {
   return (

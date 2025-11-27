@@ -1,8 +1,10 @@
 // app/Home.tsx
-import { clearSession, loadSession } from "@/storage/saveSession"; // adjust path if needed
+// adjust path if needed
+clearSession
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { clearSession, loadSession } from "../storage/saveSession";
 
 export default function Home() {
   const router = useRouter();
