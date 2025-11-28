@@ -161,7 +161,7 @@ export default function index() {
       </View>
       <View>
 
-        <GoogleSigninButton size={GoogleSigninButton.Size.Wide}  color={GoogleSigninButton.Color.Light} style={{width:212,height:48}} onPress={handleSignIn}/>
+        <GoogleSigninButton size={GoogleSigninButton.Size.Wide}  color={GoogleSigninButton.Color.Light} style={{width:212,height:48}} onPress={()=>router.replace("/(tabs)/FarmerForm")}/>
       </View>
     </View>
     </SafeAreaView>

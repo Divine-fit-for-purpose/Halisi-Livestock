@@ -36,6 +36,11 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
+const cities = {
+    Kenya: ["Nairobi", "Mombasa", "Kisumu"],
+    Congo: ["Kinshasa", "Goma", "Lubumbashi"]
+  };
+
   const [step, setStep] = useState<number>(1);
   const totalSteps = 5;
 const [isEnabled, setIsEnabled] = useState(false);
@@ -57,8 +62,18 @@ const [isEnabled, setIsEnabled] = useState(false);
   const [nationalId, setNationalId] = useState("");
   const [address, setAddress] = useState("");
   const [verify, setVerified] = useState(false);
-  
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [isMemberCooperative, setIsMemberCooperative] = useState(false);
 
+  const [nameOfCooperative, setNameOfCooperative] = useState("");
+  const [experience, setExperience] = useState();
+const [ageCategory, setAgeCategory] = useState();  
+const [schooling, setSchooling] = useState();
+const [accommodation, setAccommodation] = useState();
+const[residentialStatus,setResidentialStatus]=useState();
+const [tenureWithFinancialInstitution, setTenureWithFinancialInstitution] = useState();
+const [annualIncome, setAnnualIncome] = useState();
+const [farmerKRAPin, setFarmerKRApin] = useState("");
   // Camera toggle
   const toggleCameraFacing = () =>
     setFacing((current) => (current === "back" ? "front" : "back"));
@@ -432,7 +447,7 @@ isEnabled={isEnabled}
         cameraRef={cameraRef}
         facing={facing}
         toggleCameraFacing={toggleCameraFacing}
-        takePicture={takePicture}
+        setPhotoBase64={setPhotoBase64}
         species={"farmer"}
       />
         );
@@ -451,6 +466,35 @@ isEnabled={isEnabled}
         setEmail={setEmail}
         setGender={setGender}
         setNationalId={setNationalId}
+        country={country}
+        setCountry={setCountry}
+        city={city}
+        setCity={setCity}
+        phone={phone}
+        setPhone={setPhone}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        isMemberCooperative={isMemberCooperative}
+        setIsMemberCooperative={setIsMemberCooperative}
+        nameOfCooperative={nameOfCooperative}
+        setNameOfCooperative={setNameOfCooperative}
+        experience={experience}
+        setExperience={setExperience}
+        ageCategory={ageCategory}
+        setAgeCategory={setAgeCategory}
+        schooling={schooling}
+        setSchooling={setSchooling}
+        accommodation={accommodation}
+        setAccommodation={setAccommodation}
+        residentialStatus={residentialStatus}
+        setResidentialStatus={setResidentialStatus}
+        annualIncome={annualIncome}
+        setAnnualIncome={setAnnualIncome}
+        tenureWithFinancialInstitution={tenureWithFinancialInstitution}
+        setTenureWithFinancialInstitution={setTenureWithFinancialInstitution}
+        farmerKRAPin={farmerKRAPin}
+        setFarmerKRApin={setFarmerKRApin}
+
       />
         );
 
